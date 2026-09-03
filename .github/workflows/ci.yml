@@ -1,0 +1,34 @@
+name: VeriLogic CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build & Verify (DO-178C MC/DC & ArchUnit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 LTS
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compile and Run All Tests (Domain, MC/DC, ArchUnit, Pipeline)
+        run: mvn -B clean test
+
+      - name: Package Multi-Module Artifacts
+        run: mvn -B package -DskipTests

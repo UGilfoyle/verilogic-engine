@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VeriLogic &mdash; Dual-Brain Neurosymbolic Decision Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --lumo-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --lumo-font-family-monospace: 'JetBrains Mono', monospace;
+      --lumo-border-radius-m: 6px;
+      --lumo-border-radius-s: 4px;
+      --vl-surface: #ffffff;
+      --vl-border: rgba(0, 0, 0, 0.08);
+      --vl-border-subtle: rgba(0, 0, 0, 0.04);
+      --vl-mono-bg: #f8fafc;
+    }
+
+    [theme~="dark"] {
+      --vl-surface: #1e293b;
+      --vl-border: rgba(255, 255, 255, 0.08);
+      --vl-border-subtle: rgba(255, 255, 255, 0.04);
+      --vl-mono-bg: #0f172a;
+    }
+
+    body, #outlet {
+      height: 100vh;
+      width: 100%;
+      margin: 0;
+      font-family: var(--lumo-font-family);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Polished Card Containers */
+    .vl-card {
+      background: var(--lumo-base-color);
+      border: 1px solid var(--vl-border);
+      border-radius: 8px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .vl-card:hover {
+      border-color: rgba(0, 0, 0, 0.14);
+    }
+
+    /* Terminal Monospace Area */
+    .vl-terminal-input textarea {
+      font-family: var(--lumo-font-family-monospace) !important;
+      font-size: 12.5px !important;
+      line-height: 1.6 !important;
+      background: var(--vl-mono-bg) !important;
+      border-radius: 6px !important;
+      padding: 12px 14px !important;
+    }
+
+    /* Crisp Numerical Alignment */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+    }
+
+    /* Institutional Metric Tiles */
+    .vl-metric-card {
+      background: var(--lumo-base-color);
+      border: 1px solid var(--vl-border);
+      border-top: 3px solid var(--lumo-primary-color);
+      border-radius: 6px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .vl-metric-card.success {
+      border-top-color: #10b981;
+    }
+
+    .vl-metric-card.warning {
+      border-top-color: #f59e0b;
+    }
+
+    .vl-metric-card.error {
+      border-top-color: #ef4444;
+    }
+
+    .vl-metric-card.accent {
+      border-top-color: #6366f1;
+    }
+
+    .vl-metric-value {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .vl-metric-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--lumo-secondary-text-color);
+    }
+
+    /* Status Badges */
+    .vl-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-family: var(--lumo-font-family-monospace);
+    }
+
+    .vl-status-pill.certified {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .vl-status-pill.rejected {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .vl-status-pill.reconciled {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    /* Subtle Pulsing Status Dot */
+    @keyframes vl-pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .vl-live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #10b981;
+      display: inline-block;
+      animation: vl-pulse 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div id="outlet"></div>
+</body>
+</html>

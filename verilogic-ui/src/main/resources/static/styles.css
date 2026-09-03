@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+    --lumo-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --lumo-font-family-monospace: 'JetBrains Mono', monospace;
+    --lumo-primary-color: #2563eb;
+    --lumo-primary-color-50pct: rgba(37, 99, 235, 0.5);
+    --lumo-primary-color-10pct: rgba(37, 99, 235, 0.1);
+    --lumo-success-color: #059669;
+    --lumo-error-color: #e11d48;
+    --lumo-base-color: #ffffff;
+    --lumo-body-text-color: #0f172a;
+    --lumo-header-text-color: #0f172a;
+    --lumo-secondary-text-color: #64748b;
+    --vl-card-bg: #ffffff;
+    --vl-card-border: #e2e8f0;
+    --vl-bg-subtle: #f8fafc;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--lumo-font-family);
+    background-color: #f1f5f9;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+/* Premium Card Container */
+.vl-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05) !important;
+    overflow: hidden;
+}
+
+/* Header Live Status Dot */
+.vl-live-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: vl-pulse 2s infinite;
+}
+
+@keyframes vl-pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 7px rgba(16, 185, 129, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* KPI Metric Cards - Block layout, No horizontal smash */
+.vl-metric-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 16px 18px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+    min-width: 170px !important;
+    box-sizing: border-box !important;
+    gap: 4px !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vl-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08) !important;
+}
+
+.vl-metric-label {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    display: block !important;
+    margin: 0 !important;
+}
+
+.vl-metric-value {
+    font-size: 1.55rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    font-family: var(--lumo-font-family-monospace) !important;
+    display: block !important;
+    line-height: 1.25 !important;
+    margin: 4px 0 !important;
+}
+
+.vl-metric-subtext {
+    font-size: 0.72rem !important;
+    color: #94a3b8 !important;
+    display: block !important;
+    margin: 0 !important;
+}
+
+/* Status Badges */
+.vl-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.vl-status-pill.certified {
+    background: #ecfdf5 !important;
+    color: #065f46 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+.vl-status-pill.rejected {
+    background: #fff1f2 !important;
+    color: #9f1239 !important;
+    border: 1px solid #fecdd3 !important;
+}
+
+.vl-status-pill.reconciled {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+}
+
+/* Executive Decision Hero Banner */
+.vl-hero-approved {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+    border: 1px solid #6ee7b7 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.12) !important;
+}
+
+.vl-hero-rejected {
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%) !important;
+    border: 1px solid #fda4af !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px 0 rgba(225, 29, 72, 0.12) !important;
+}
+
+.vl-hero-reconciled {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+    border: 1px solid #fcd34d !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px 0 rgba(217, 119, 6, 0.12) !important;
+}
+
+/* Cryptographic Security Box */
+.vl-crypto-certificate {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    border-radius: 12px !important;
+    border: 1px solid #1e293b !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.25) !important;
+}
+
+.vl-crypto-certificate::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #10b981, #6366f1);
+}
+
+/* Rule Card Container */
+.vl-rule-card {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    transition: all 0.2s ease;
+}
+
+.vl-rule-card:hover {
+    border-color: #cbd5e1 !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Primary Action Button */
+.vl-primary-button {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.35) !important;
+    transition: all 0.2s ease !important;
+}
+
+.vl-primary-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.45) !important;
+}
+
+.vl-primary-button:active {
+    transform: translateY(0);
+}
+
+/* Responsive Rules & Media Queries */
+@media (max-width: 1200px) {
+    .vl-status-verbose {
+        display: none !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .vl-brand-tag {
+        display: none !important;
+    }
+    .vl-system-status {
+        display: none !important;
+    }
+    vaadin-split-layout {
+        flex-direction: column !important;
+    }
+    vaadin-split-layout > [slot="primary"],
+    vaadin-split-layout > [slot="secondary"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 auto !important;
+    }
+    vaadin-split-layout > [part="splitter"] {
+        display: none !important;
+    }
+}

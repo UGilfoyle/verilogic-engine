@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Valkey 8.0 (Linux Foundation open-source fork of Redis)
+  valkey:
+    image: valkey/valkey:8.0-alpine
+    container_name: verilogic-valkey
+    ports:
+      - "6379:6379"
+    command: valkey-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # PostgreSQL 16 for cryptographic audit logging
+  postgres:
+    image: postgres:16-alpine
+    container_name: verilogic-postgres
+    environment:
+      POSTGRES_DB: verilogic
+      POSTGRES_USER: verilogic
+      POSTGRES_PASSWORD: verilogic_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verilogic -d verilogic"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:

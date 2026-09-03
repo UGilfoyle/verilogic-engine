@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: verilogic-engine
+  main:
+    banner-mode: console
+
+vaadin:
+  launch-browser: false
+  whitelisted-packages:
+    - com.verilogic.ui
+
+valkey:
+  host: ${VALKEY_HOST:localhost}
+  port: ${VALKEY_PORT:6379}
+
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  model: ${OLLAMA_MODEL:llama3}
+
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.15t]){faint} %clr(%-35.35logger{34}){cyan} %clr(:){faint} %msg%n"
+  level:
+    root: INFO
+    com.verilogic: DEBUG
+    org.springframework.web: INFO
+    org.apache.catalina: WARN
