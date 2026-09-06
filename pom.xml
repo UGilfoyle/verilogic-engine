@@ -48,7 +48,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <spring.boot.version>3.3.3</spring.boot.version>
-        <vaadin.version>24.4.9</vaadin.version>
+        <vaadin.version>24.10.9</vaadin.version>
         <langchain4j.version>0.35.0</langchain4j.version>
         <jedis.version>5.2.0</jedis.version>
         <junit.jupiter.version>5.10.3</junit.jupiter.version>
