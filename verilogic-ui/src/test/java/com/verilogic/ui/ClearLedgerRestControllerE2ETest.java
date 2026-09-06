@@ -196,6 +196,71 @@ class ClearLedgerRestControllerE2ETest {
     }
 
     @Test
+    @DisplayName("Documented README sample payload certifies without explicit isBalanced")
+    void testDocumentedSamplePayload_Certifies() throws Exception {
+        Map<String, Object> payload = Map.of(
+                "bankName", "HDFC Bank",
+                "accountNumber", "9018420911",
+                "accountHolder", "Rajesh Sharma",
+                "totalCredits", 80400.0,
+                "totalDebits", 16800.0,
+                "loanAmountRequested", 300000.0,
+                "hasGuarantor", true,
+                "monthsOfHistory", 6,
+                "fraud", Map.of(
+                        "overallRiskScore", 8,
+                        "riskLevel", "LOW",
+                        "documentAuthenticity", 99.8,
+                        "isTamperedPDF", false,
+                        "averageBankBalance", 54200.0,
+                        "salaryDetected", true,
+                        "salaryAmount", 13400.0,
+                        "inwardBouncesCount", 0
+                )
+        );
+
+        mockMvc.perform(post("/api/v1/underwrite/clearledger")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CERTIFIED"))
+                .andExpect(jsonPath("$.issuer").value("VeriLogic-Engine/v1.0"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/cases/evaluate accepts submitterId alias")
+    void testDirectDossierEvaluation_SubmitterAlias() throws Exception {
+        Map<String, Object> command = Map.of(
+                "rawUnstructuredText", "Applicant: Morgan Vance, Credit Score: 760 FICO, Monthly Income: $14,000, Monthly Debt: $2,500, Requested Loan: $250,000, Guarantor: Yes",
+                "submitterId", "loan-officer-102",
+                "dryRun", true
+        );
+
+        mockMvc.perform(post("/api/v1/cases/evaluate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-VeriLogic-Certificate-Id"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/ledger/verify reports chain integrity")
+    void testLedgerVerifyEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/ledger/verify"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.chainIntact").value(true))
+                .andExpect(jsonPath("$.tipHash", not(emptyString())));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/certificates/{id} returns 404 for unknown id")
+    void testCertificateNotFound() throws Exception {
+        mockMvc.perform(get("/api/v1/certificates/does-not-exist"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CERTIFICATE_NOT_FOUND"));
+    }
+
+    @Test
     @DisplayName("POST /api/v1/cases/evaluate executes raw text underwriting")
     void testDirectDossierEvaluation() throws Exception {
         Map<String, Object> command = Map.of(

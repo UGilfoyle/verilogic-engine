@@ -1,0 +1,4 @@
+verilogic:
+  trust-forwarded-headers: true
+  cors:
+    allowed-origins: http://localhost:8080

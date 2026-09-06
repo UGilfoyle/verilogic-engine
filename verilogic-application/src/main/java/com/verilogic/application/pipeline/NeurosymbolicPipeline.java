@@ -14,6 +14,9 @@ import com.verilogic.domain.model.ProofTrace;
 import com.verilogic.domain.model.VerificationCertificate;
 import com.verilogic.domain.rule.McdcTruthTable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -30,6 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Combines Pipeline Pattern, Strategy Pattern, and Distributed Mutex via Valkey.
  */
 public class NeurosymbolicPipeline implements EvaluateCaseUseCase, InspectProofTraceUseCase, InspectMcdcMatrixUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(NeurosymbolicPipeline.class);
 
     public static final String VALKEY_EVENT_CHANNEL = "verilogic:events:audit";
     public static final long LOCK_TTL_MILLIS = 30_000L;
@@ -61,7 +66,7 @@ public class NeurosymbolicPipeline implements EvaluateCaseUseCase, InspectProofT
         // Stage 0: Adversarial Prompt Injection Defense & Token Sanitization
         var scanResult = com.verilogic.application.security.PromptInjectionDetector.scan(command.rawUnstructuredText());
         if (scanResult.threatDetected()) {
-            System.err.println("[SECURITY ALERT] Adversarial prompt injection detected: " + scanResult.detectedThreats());
+            log.warn("[SECURITY ALERT] Adversarial prompt injection detected: {}", scanResult.detectedThreats());
         }
         String cleanContext = scanResult.sanitizedText();
 

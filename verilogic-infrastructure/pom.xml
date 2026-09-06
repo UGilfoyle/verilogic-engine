@@ -12,7 +12,7 @@
 
     <artifactId>verilogic-infrastructure</artifactId>
     <name>VeriLogic :: Infrastructure (Adapters)</name>
-    <description>External adapters for Ollama/LangChain4j, Valkey distributed locking, and PostgreSQL audit logging</description>
+    <description>External adapters for Ollama/LangChain4j, Valkey distributed locking, and the in-memory cryptographic audit ledger</description>
 
     <dependencies>
         <dependency>

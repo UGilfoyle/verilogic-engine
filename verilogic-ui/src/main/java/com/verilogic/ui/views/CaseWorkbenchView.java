@@ -113,7 +113,7 @@ public class CaseWorkbenchView extends VerticalLayout {
         titles.setPadding(false);
         titles.setSpacing(false);
 
-        Span engineBadge = new Span("ENGINE: Z3 DETERMINISTIC SOLVER (SUB-MS)");
+        Span engineBadge = new Span("ENGINE: DETERMINISTIC POLICY SOLVER");
         engineBadge.getElement().getThemeList().add("badge success small");
         engineBadge.getStyle().set("font-family", "var(--lumo-font-family-monospace)");
         engineBadge.getStyle().set("font-size", "0.70rem");

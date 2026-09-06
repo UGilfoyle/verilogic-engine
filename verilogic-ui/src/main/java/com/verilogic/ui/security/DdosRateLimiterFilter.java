@@ -36,6 +36,11 @@ public class DdosRateLimiterFilter implements Filter {
     public static final int BURST_CAPACITY = 150;
 
     private final Map<String, TokenBucket> bucketRegistry = new ConcurrentHashMap<>();
+    private final ClientIpResolver clientIpResolver;
+
+    public DdosRateLimiterFilter(ClientIpResolver clientIpResolver) {
+        this.clientIpResolver = clientIpResolver;
+    }
 
     private static class TokenBucket {
         private final AtomicLong lastRefillTimestampNanos = new AtomicLong(System.nanoTime());
@@ -84,7 +89,7 @@ public class DdosRateLimiterFilter implements Filter {
                 return;
             }
 
-            String clientIp = extractClientIp(httpRequest);
+            String clientIp = clientIpResolver.resolve(httpRequest);
             TokenBucket bucket = bucketRegistry.computeIfAbsent(clientIp, k -> new TokenBucket());
 
             int remainingTokens = bucket.getAvailableTokens();
@@ -112,11 +117,4 @@ public class DdosRateLimiterFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    public static String extractClientIp(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        if (xfHeader == null || xfHeader.isBlank()) {
-            return request.getRemoteAddr();
-        }
-        return xfHeader.split(",")[0].trim();
-    }
 }

@@ -9,7 +9,37 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>VeriLogic :: Parent</name>
-    <description>High-Assurance Neurosymbolic Decision &amp; Deterministic Compliance Engine</description>
+    <description>Enterprise loan decision and statutory underwriting engine with deterministic rules and a cryptographic audit ledger</description>
+    <url>https://github.com/UGilfoyle/verilogic-engine</url>
+    <inceptionYear>2026</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>ugilfoyle</id>
+            <name>Akash Kaintura</name>
+            <url>https://github.com/UGilfoyle</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/UGilfoyle/verilogic-engine.git</connection>
+        <developerConnection>scm:git:https://github.com/UGilfoyle/verilogic-engine.git</developerConnection>
+        <url>https://github.com/UGilfoyle/verilogic-engine</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/UGilfoyle/verilogic-engine/issues</url>
+    </issueManagement>
 
     <properties>
         <java.version>21</java.version>
@@ -20,7 +50,6 @@
         <spring.boot.version>3.3.3</spring.boot.version>
         <vaadin.version>24.4.9</vaadin.version>
         <langchain4j.version>0.35.0</langchain4j.version>
-        <timefold.version>1.14.0</timefold.version>
         <jedis.version>5.2.0</jedis.version>
         <junit.jupiter.version>5.10.3</junit.jupiter.version>
         <assertj.version>3.26.3</assertj.version>
@@ -60,15 +89,6 @@
                 <groupId>dev.langchain4j</groupId>
                 <artifactId>langchain4j-bom</artifactId>
                 <version>${langchain4j.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Timefold Solver BOM -->
-            <dependency>
-                <groupId>ai.timefold.solver</groupId>
-                <artifactId>timefold-solver-bom</artifactId>
-                <version>${timefold.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -146,5 +166,16 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 </project>

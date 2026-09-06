@@ -64,6 +64,26 @@ public class GlobalRestExceptionHandler {
                 .body(body);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
+        String traceId = "err-" + UUID.randomUUID().toString().substring(0, 8);
+        log.warn("[API WARN] [409 CONFLICT] Concurrent evaluation on URI [{}]: {}",
+                request.getRequestURI(), ex.getMessage());
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", Instant.now().toString());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("code", "CASE_ALREADY_IN_PROGRESS");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getRequestURI());
+        body.put("traceId", traceId);
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .header("X-VeriLogic-Trace-Id", traceId)
+                .body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex, HttpServletRequest request) {
         String traceId = "err-" + UUID.randomUUID().toString().substring(0, 8);

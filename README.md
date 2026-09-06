@@ -1,75 +1,105 @@
-# VeriLogic
+# VeriLogic Engine
 
+[![CI](https://github.com/UGilfoyle/verilogic-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/UGilfoyle/verilogic-engine/actions/workflows/ci.yml)
 [![Java 21](https://img.shields.io/badge/Java-21%20LTS-ED8B00?style=flat&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot 3.3](https://img.shields.io/badge/Spring%20Boot-3.3.3-6DB33F?style=flat&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Vaadin 24](https://img.shields.io/badge/Vaadin-24.4-00B4F0?style=flat&logo=vaadin&logoColor=white)](https://vaadin.com/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-> **Institutional Underwriting &amp; Regulatory Compliance Engine**  
-> Fast, reliable loan decisioning paired with forensic bank statement verification and tamper-proof audit receipts.
+Deterministic loan decision engine with statutory rule proofs, a chained SHA-256 audit ledger, and a Vaadin workbench.
+
+The engine evaluates Qualified Mortgage DTI, Basel III liquidity, and AML solvency rules in-process. It does **not** require Ollama or Valkey to start: those adapters fail open to a regex extractor and an in-memory lock.
 
 ---
 
-## Overview
+## What it does
 
-VeriLogic is an automated credit underwriting platform built for commercial banks, credit unions, and fintech lenders. It automates credit policy evaluation, verifies bank statements against fraud, and generates permanent, audit-ready records for bank examiners and regulators.
+- Scores a structured bank-statement payload or a free-text loan memo against three published rule formulas
+- Rejects tampered PDFs and unbalanced ledgers before policy evaluation
+- Seals every decision into a Merkle-linked certificate (`H(input ‖ rules)` / `H(proof ‖ previous)`)
+- Exposes the same pipeline through REST and a four-screen workbench
 
-By combining deterministic rule verification with forensic bank statement intelligence, VeriLogic enables financial institutions to disburse capital with full regulatory confidence in under one millisecond.
-
----
-
-## Key Capabilities
-
-- **Instant Credit Decisioning:** Evaluates lending criteria, debt-to-income limits, and cash reserve requirements in `< 1 millisecond`.
-- **Forensic Bank Statement Ingestion:** Directly connects with forensic engines (like ClearLedger) to detect tampered PDFs, ghost transactions, and balance discontinuities.
-- **Automated Statutory Compliance:** Built-in verification for:
-  - **Qualified Mortgage (12 CFR § 1026.43(e)):** Hard ceiling on 43% DTI unless supported by verified cash reserves and guarantors.
-  - **Basel III Liquidity Coverage (BCBS d238):** Solvency and liquid reserve verification.
-  - **Anti-Money Laundering (31 U.S.C. § 5313):** Flags abnormal income-to-debt velocity anomalies.
-- **Tamper-Proof Audit Trail:** Every underwriting decision receives an immutable cryptographic fingerprint chained sequentially to previous records, guaranteeing non-repudiation during regulatory audits.
-- **Enterprise Security Hardened:**
-  - **DDoS Mitigation:** High-throughput sliding-window token bucket rate limiter (100 req/sec per IP).
-  - **SQL Injection Defense:** Real-time payload inspection rejecting malicious database injection vectors.
-  - **Brute-Force Protection:** Automated IP lockout with exponential backoff on repeated abusive attempts.
+This is a high-assurance **demo and research engine**. The default ledger lives in memory. Do not treat a single-process run as a production system of record.
 
 ---
 
-## Quickstart Guide
+## Architecture
+
+```mermaid
+flowchart LR
+    UI[Vaadin workbench] --> API["REST /api/v1"]
+    API --> APP[Application pipeline]
+    APP --> DOM[Domain rules]
+    APP --> LLM[LLM port]
+    APP --> LOCK[Valkey port]
+    APP --> LEDGER[Audit ledger port]
+    LLM --> REGEX[Regex / optional Ollama]
+    LOCK --> MEM[In-memory fallback]
+    LEDGER --> IMM[In-memory chain]
+```
+
+| Module | Role |
+|---|---|
+| `verilogic-domain` | Pure Java models and MC/DC rule tables. Zero framework imports. |
+| `verilogic-application` | Use cases, ports, prompt-injection scan, reconciliation loop. |
+| `verilogic-infrastructure` | Valkey, Ollama, deterministic solver, in-memory ledger. |
+| `verilogic-ui` | Vaadin 24 workbench and REST gateway. |
+
+---
+
+## Quick start
 
 ### Prerequisites
-- **Java 21 LTS** or higher
-- **Apache Maven 3.9+**
 
-### 1. Build the Platform
+- Java 21 LTS
+- Maven 3.9+ (or the bundled `./mvnw`)
+
+### Run locally
+
 ```bash
 git clone https://github.com/UGilfoyle/verilogic-engine.git
 cd verilogic-engine
-mvn clean install -DskipTests
+./mvnw -B test
+./mvnw -pl verilogic-ui -am spring-boot:run
 ```
 
-### 2. Launch the Application
+Open [http://localhost:8080](http://localhost:8080).
+
+To build a runnable jar:
+
 ```bash
+./mvnw -B package -DskipTests
 java -jar verilogic-ui/target/verilogic-ui-1.0.0-SNAPSHOT.jar
 ```
 
-Once started, open your browser and navigate to:
+### Docker
+
+```bash
+docker compose up --build
 ```
-http://localhost:8080
-```
+
+Valkey starts automatically. The app still works if you stop Valkey later; locks fall back to process memory.
 
 ---
 
-## REST API Reference
+## REST API
 
-VeriLogic exposes clean, hardened REST endpoints for core banking and loan origination system (LOS) integrations.
+Base URL: `http://localhost:8080`
 
-### 1. Underwrite Bank Statement
-Submits a verified financial statement payload for automated underwriting.
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/v1/health` | Liveness |
+| `POST` | `/api/v1/underwrite/clearledger` | Structured statement underwriting |
+| `POST` | `/api/v1/cases/evaluate` | Free-text memo underwriting |
+| `GET` | `/api/v1/certificates/{id}` | Fetch a sealed certificate |
+| `GET` | `/api/v1/certificates/case/{caseId}` | Fetch by case id |
+| `GET` | `/api/v1/ledger/recent` | Recent certificates |
+| `GET` | `/api/v1/ledger/verify` | Recompute the hash chain |
 
-- **Endpoint:** `POST /api/v1/underwrite/clearledger`
-- **Headers:** `Content-Type: application/json`
+### Underwrite a bank statement
 
-#### Request Payload
+`POST /api/v1/underwrite/clearledger`
+
 ```json
 {
   "bankName": "HDFC Bank",
@@ -93,7 +123,10 @@ Submits a verified financial statement payload for automated underwriting.
 }
 ```
 
-#### Response (200 OK)
+Omitted ledger fields (`isBalanced`, balances, discrepancy) default to a balanced statement. Send `isBalanced: false` with a non-zero `discrepancyAmount` to trigger the forensic reject path.
+
+#### 200 response
+
 ```json
 {
   "certificateId": "ddc81d9d-05fa-422b-b46d-6b7437746e2a",
@@ -106,35 +139,72 @@ Submits a verified financial statement payload for automated underwriting.
 }
 ```
 
----
+Status values: `CERTIFIED`, `VIOLATED`, `RECONCILED`, `REJECTED`.
 
-### 2. Underwrite Loan Application Text
-Submits raw loan memo text or applicant details.
+### Evaluate a loan memo
 
-- **Endpoint:** `POST /api/v1/cases/evaluate`
-- **Headers:** `Content-Type: application/json`
+`POST /api/v1/cases/evaluate`
 
 ```json
 {
   "rawUnstructuredText": "Applicant: Morgan Vance, Credit Score: 745 FICO, Monthly Income: $12,500, Monthly Debt: $2,800, Requested Loan: $280,000, Guarantor: Yes",
-  "submitterId": "loan-officer-102",
+  "requestedBy": "loan-officer-102",
   "dryRun": false
 }
 ```
 
+`submitterId` is accepted as an alias for `requestedBy`.
+
 ---
 
-## Security Specifications
+## Policy rules
 
-| Layer | Policy | Action |
+| Rule | Citation | Formula |
 |---|---|---|
-| **DDoS Rate Limiting** | 100 requests/sec per client IP (Burst: 150) | Returns `HTTP 429 Too Many Requests` with `Retry-After` header. |
-| **SQL Injection Guard** | Scans all incoming parameters and JSON payloads | Rejects union, stacked, and blind injection vectors (`HTTP 400 Bad Request`). |
-| **Abuse Lockout** | 5 flagged attempts within 60 seconds | Jails IP for 15 minutes with exponential backoff on repeat offenses (`HTTP 403 Forbidden`). |
-| **Prompt Sanitization** | Neutralizes prompt overrides and strips hidden Unicode tokens | Prevents conversational model manipulation. |
+| Qualified Mortgage | 12 CFR § 1026.43(e) | `(DTI <= 0.43 && Score >= 680) \|\| (Reserves >= 1.50 && HasGuarantor)` |
+| Liquidity coverage | Basel III BCBS d238 | `Income >= 5000 && (Reserves >= 0.20 * Loan \|\| RiskScore <= 0.25)` |
+| AML / solvency | 31 U.S.C. § 5313 | `RiskScore <= 0.40 && Debt < Income` |
+
+Each rule ships with an MC/DC truth table and a JUnit suite in `verilogic-domain`.
+
+---
+
+## Configuration
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `SERVER_PORT` | `8080` | HTTP port |
+| `VALKEY_HOST` / `VALKEY_PORT` | `localhost` / `6379` | Optional distributed lock |
+| `OLLAMA_BASE_URL` / `OLLAMA_MODEL` | `http://localhost:11434` / `llama3` | Optional LLM extractor |
+| `TRUST_FORWARDED_HEADERS` | `false` | Trust `X-Forwarded-For` only behind a proxy |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:8080` | Comma-separated browser origins |
+
+---
+
+## Security
+
+| Control | Default behavior |
+|---|---|
+| Rate limit | 100 req/s per IP, burst 150, HTTP 429 |
+| SQL-injection scan | HTTP 400 on matched payloads |
+| Abuse lockout | 5 flagged attempts / 60s → 15 minute jail, HTTP 403 |
+| Prompt sanitization | Strips hidden Unicode and known override phrases |
+| Forwarded headers | Disabled unless `TRUST_FORWARDED_HEADERS=true` |
+
+These are in-process guards for the demo API. They are not a replacement for a reverse proxy, WAF, or parameterized persistence.
+
+---
+
+## Tests
+
+```bash
+./mvnw -B test
+```
+
+Coverage includes MC/DC rule vectors, hexagonal ArchUnit checks, cryptographic chain continuity, REST contracts, and the rate-limiter / lockout filters.
 
 ---
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

@@ -66,7 +66,7 @@ public record VerificationCertificate(
                 prevHash,
                 merkleRoot,
                 Instant.now(),
-                "VeriLogic-ZeroHallucination-Engine/v1.0"
+                "VeriLogic-Engine/v1.0"
         );
     }
 

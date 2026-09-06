@@ -53,6 +53,15 @@ public record ClearLedgerStatementPayload(
         if (loanAmountRequested <= 0.0) {
             loanAmountRequested = 250_000.0; // default loan requested if not specified
         }
+        // Jackson maps omitted booleans to false. Treat a fully omitted ledger
+        // continuity block (all zeros) as balanced so the documented API sample works.
+        if (!isBalanced
+                && discrepancyAmount == 0.0
+                && openingBalance == 0.0
+                && closingBalance == 0.0
+                && transactionCount == 0) {
+            isBalanced = true;
+        }
         if (fraud == null) {
             fraud = new FraudReportPayload(
                     10, "LOW", "SANCTION_APPROVED", 99.8, "Core Banking",

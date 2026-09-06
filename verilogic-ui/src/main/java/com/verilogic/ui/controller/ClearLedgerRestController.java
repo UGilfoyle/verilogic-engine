@@ -3,19 +3,19 @@ package com.verilogic.ui.controller;
 import com.verilogic.application.port.in.ClearLedgerStatementPayload;
 import com.verilogic.application.port.in.ClearLedgerUnderwritingUseCase;
 import com.verilogic.application.port.in.EvaluateCaseUseCase;
-import com.verilogic.application.port.in.SubmitCaseCommand;
+import com.verilogic.application.port.out.AuditStoragePort;
 import com.verilogic.domain.model.VerificationCertificate;
 import com.verilogic.infrastructure.security.BruteForceLockoutService;
 import com.verilogic.infrastructure.security.SqlInjectionDefenseGuard;
-import com.verilogic.ui.security.DdosRateLimiterFilter;
+import com.verilogic.ui.security.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,7 +36,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1")
-@CrossOrigin(origins = "*")
 public class ClearLedgerRestController {
 
     private static final Logger log = LoggerFactory.getLogger(ClearLedgerRestController.class);
@@ -44,15 +43,21 @@ public class ClearLedgerRestController {
     private final ClearLedgerUnderwritingUseCase clearLedgerUseCase;
     private final EvaluateCaseUseCase evaluateCaseUseCase;
     private final BruteForceLockoutService lockoutService;
+    private final ClientIpResolver clientIpResolver;
+    private final AuditStoragePort auditStoragePort;
 
     public ClearLedgerRestController(
             ClearLedgerUnderwritingUseCase clearLedgerUseCase,
             EvaluateCaseUseCase evaluateCaseUseCase,
-            BruteForceLockoutService lockoutService
+            BruteForceLockoutService lockoutService,
+            ClientIpResolver clientIpResolver,
+            AuditStoragePort auditStoragePort
     ) {
         this.clearLedgerUseCase = Objects.requireNonNull(clearLedgerUseCase, "clearLedgerUseCase cannot be null");
         this.evaluateCaseUseCase = Objects.requireNonNull(evaluateCaseUseCase, "evaluateCaseUseCase cannot be null");
         this.lockoutService = Objects.requireNonNull(lockoutService, "lockoutService cannot be null");
+        this.clientIpResolver = Objects.requireNonNull(clientIpResolver, "clientIpResolver cannot be null");
+        this.auditStoragePort = Objects.requireNonNull(auditStoragePort, "auditStoragePort cannot be null");
     }
 
     @GetMapping("/health")
@@ -76,7 +81,7 @@ public class ClearLedgerRestController {
             HttpServletRequest request
     ) {
         long startTime = System.nanoTime();
-        String clientIp = DdosRateLimiterFilter.extractClientIp(request);
+        String clientIp = clientIpResolver.resolve(request);
         String traceId = "trc-" + UUID.randomUUID().toString().substring(0, 8);
 
         log.info("--> [API REQUEST] Inbound Underwriting | Client IP: {} | Bank: '{}' | Account: '{}' | Holder: '{}' | Amount: ${} | Balanced: {} | Trace: {}",
@@ -155,12 +160,13 @@ public class ClearLedgerRestController {
      */
     @PostMapping("/cases/evaluate")
     public ResponseEntity<?> evaluateRawCase(
-            @RequestBody SubmitCaseCommand command,
+            @RequestBody EvaluateCaseRequest requestBody,
             HttpServletRequest request
     ) {
         long startTime = System.nanoTime();
-        String clientIp = DdosRateLimiterFilter.extractClientIp(request);
+        String clientIp = clientIpResolver.resolve(request);
         String traceId = "trc-" + UUID.randomUUID().toString().substring(0, 8);
+        var command = requestBody.toCommand();
 
         log.info("--> [API REQUEST] Direct Dossier Submission | Client IP: {} | Requested By: '{}' | Trace: {}",
                 clientIp, command.requestedBy(), traceId);
@@ -218,5 +224,46 @@ public class ClearLedgerRestController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(certificate);
+    }
+
+    @GetMapping("/certificates/{certificateId}")
+    public ResponseEntity<?> getCertificate(@PathVariable String certificateId) {
+        return auditStoragePort.findCertificateById(certificateId)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "status", HttpStatus.NOT_FOUND.value(),
+                        "code", "CERTIFICATE_NOT_FOUND",
+                        "message", "No certificate found for id " + certificateId
+                )));
+    }
+
+    @GetMapping("/certificates/case/{caseId}")
+    public ResponseEntity<?> getCertificateByCase(@PathVariable String caseId) {
+        return auditStoragePort.findCertificateByCaseId(caseId)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "status", HttpStatus.NOT_FOUND.value(),
+                        "code", "CERTIFICATE_NOT_FOUND",
+                        "message", "No certificate found for case " + caseId
+                )));
+    }
+
+    @GetMapping("/ledger/recent")
+    public ResponseEntity<?> recentCertificates(@RequestParam(defaultValue = "20") int limit) {
+        int safeLimit = Math.min(Math.max(limit, 1), 200);
+        return ResponseEntity.ok(Map.of(
+                "count", auditStoragePort.findRecentCertificates(safeLimit).size(),
+                "chainIntact", auditStoragePort.verifyFullLedgerChain(),
+                "certificates", auditStoragePort.findRecentCertificates(safeLimit)
+        ));
+    }
+
+    @GetMapping("/ledger/verify")
+    public ResponseEntity<Map<String, Object>> verifyLedger() {
+        boolean intact = auditStoragePort.verifyFullLedgerChain();
+        return ResponseEntity.ok(Map.of(
+                "chainIntact", intact,
+                "tipHash", auditStoragePort.getLatestCertificateHash()
+        ));
     }
 }
